@@ -179,9 +179,9 @@ export default function Sidebar() {
             }}
           />
         </div>
-        <div style={{ fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span>© {new Date().getFullYear()} <strong style={{ color: 'var(--text-primary)' }}>Rodrigo Alves</strong></span>
-          <span style={{ fontSize: '10px', color: 'var(--brand-teal)' }}>Core TI Expert</span>
+        <div style={{ fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '8px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <div>© {new Date().getFullYear()} <strong style={{ color: 'var(--text-primary)' }}>Rodrigo Alves</strong></div>
+          <div style={{ fontSize: '10.5px', color: 'var(--brand-teal)' }}>Core TI Expert Operations</div>
         </div>
       </div>
     </aside>
