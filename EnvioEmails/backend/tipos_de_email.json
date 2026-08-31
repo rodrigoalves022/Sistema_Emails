@@ -44,6 +44,153 @@
       "mensal"
     ]
   },
+  "DISCO_ANUAL": {
+    "categoria": "cobranca",
+    "assunto": "{cliente} - Conectar Disco Anual",
+    "titulo": "Backup Anual — Solicitação de Troca de Disco",
+    "estilo": "marca",
+    "corpo": [
+      "Esperamos que esteja tudo bem. Gostaríamos de solicitar a sua colaboração para o fechamento anual dos backups.",
+      "Para garantir a retenção de longo prazo e segurança dos dados da sua empresa, solicitamos a conexão do <strong>Disco Anual</strong> até às 16:30 de hoje.",
+      "Essa rotina anual cria uma imagem consolidada e histórica de todos os sistemas da empresa.",
+      "Agradecemos pela cooperação e permanecemos à disposição."
+    ],
+    "aplicavel_a": [
+      "anual"
+    ]
+  },
+  "INICIO_DIARIO": {
+    "categoria": "info",
+    "assunto": "{cliente} - Início da Rotina de Backup Diário",
+    "titulo": "Início da Rotina de Backup Diário",
+    "estilo": "marca",
+    "corpo": [
+      "Informamos que o Departamento de Backup está iniciando a rotina de <strong>Backup Diário</strong> agendada para sua empresa.",
+      "Pedimos que confirme a conexão do disco rígido correto e mantenha o servidor ligado durante todo o período noturno.",
+      "Qualquer divergência será notificada pela nossa equipe de suporte."
+    ],
+    "aplicavel_a": [
+      "diario"
+    ]
+  },
+  "INICIO_SEMANAL": {
+    "categoria": "info",
+    "assunto": "{cliente} - Início da Rotina de Backup Semanal",
+    "titulo": "Início da Rotina de Backup Semanal",
+    "estilo": "marca",
+    "corpo": [
+      "Informamos que o Departamento de Backup deu início às tarefas de backup realizadas de forma <strong>semanal</strong>. Gentilmente, solicitamos que insira a mídia de armazenamento correspondente, substituindo a utilizada no backup diário.",
+      "Destacamos a importância de zelar pela segurança e integridade dos dados da sua empresa: <strong>nunca mantenha dois ou mais discos de backup conectados simultaneamente</strong>. Ao trocar a mídia, retire a anterior antes de conectar a nova.",
+      "Em caso de dúvidas ou necessidade de assistência, pedimos que entre em contato conosco. Estamos à disposição."
+    ],
+    "aplicavel_a": [
+      "semanal"
+    ]
+  },
+  "INICIO_MENSAL": {
+    "categoria": "info",
+    "assunto": "{cliente} - Início da Rotina de Backup Mensal",
+    "titulo": "Início da Rotina de Backup Mensal",
+    "estilo": "marca",
+    "corpo": [
+      "Informamos que o Departamento de Backup deu início ao procedimento de <strong>Backup Mensal</strong> da sua empresa.",
+      "Solicitamos a gentileza de conectar o disco rígido destinado ao fechamento mensal, garantindo a gravação do snapshot consolidado do mês.",
+      "Lembramos que a mídia diária/semanal deve ser desconectada para evitar sobreposição de unidades.",
+      "Nossa equipe de monitoramento acompanhará o progresso e notificará a finalização."
+    ],
+    "aplicavel_a": [
+      "mensal"
+    ]
+  },
+  "INICIO_ANUAL": {
+    "categoria": "info",
+    "assunto": "{cliente} - Início da Rotina de Backup Anual",
+    "titulo": "Início da Rotina de Backup Anual",
+    "estilo": "marca",
+    "corpo": [
+      "Informamos que o Departamento de Backup iniciou a execução da rotina de <strong>Backup Anual (Fechamento Fiscal/Operacional)</strong>.",
+      "Esta rotina é crítica para o armazenamento de longo prazo e conformidade de segurança dos dados.",
+      "Por favor, certifique-se de que o disco anual correspondente esteja devidamente conectado à porta de backup designada.",
+      "Agradecemos a parceria de sempre."
+    ],
+    "aplicavel_a": [
+      "anual"
+    ]
+  },
+  "INICIO_CLOUD": {
+    "categoria": "info",
+    "assunto": "{cliente} - Sincronização de Backup em Nuvem (Cloud)",
+    "titulo": "Início do Backup em Nuvem (Cloud)",
+    "estilo": "marca",
+    "corpo": [
+      "Informamos que a rotina automatizada de replicação para a <strong>Nuvem (Cloud Backup)</strong> foi iniciada.",
+      "Os dados estão sendo criptografados em trânsito e sincronizados com o nosso datacenter seguro de contingência.",
+      "Não é necessária nenhuma ação física no local.",
+      "Permanecemos à disposição para quaisquer dúvidas."
+    ],
+    "aplicavel_a": [
+      "cloud"
+    ]
+  },
+  "FINALIZADO_DIARIO": {
+    "categoria": "sucesso",
+    "assunto": "{cliente} - Backup Diário Concluído com Sucesso",
+    "titulo": "Conclusão da Rotina de Backup Diário",
+    "estilo": "marca",
+    "corpo": [
+      "Informamos que a rotina de backup diário foi concluída com sucesso.",
+      "Todos os volumes e bases de dados foram verificados e validados com integridade.",
+      "Agradecemos a cooperação no cumprimento das rotinas operacionais de segurança."
+    ],
+    "aplicavel_a": [
+      "diario"
+    ]
+  },
+  "FINALIZADO_SEMANAL": {
+    "categoria": "sucesso",
+    "assunto": "{cliente} - Backup Semanal Finalizado",
+    "titulo": "Conclusão da Rotina de Backup Semanal",
+    "estilo": "marca",
+    "corpo": [
+      "É com satisfação que informamos a conclusão bem-sucedida da nossa rotina de backup semanal.",
+      "Neste momento, é importante substituir a mídia de backup semanal pelo disco de backup diário, dando continuidade à rotina diária e mantendo seus dados sempre atualizados e protegidos.",
+      "A não realização dessa troca impossibilita a execução do backup diário, colocando em risco a continuidade das suas operações.",
+      "Para esclarecimentos ou assistência, nossa equipe de suporte está à disposição."
+    ],
+    "aplicavel_a": [
+      "semanal"
+    ]
+  },
+  "FINALIZADO_MENSAL": {
+    "categoria": "sucesso",
+    "assunto": "{cliente} - Backup Mensal Finalizado",
+    "titulo": "Conclusão da Rotina de Backup Mensal",
+    "estilo": "marca",
+    "corpo": [
+      "É com satisfação que informamos a conclusão bem-sucedida da nossa rotina de backup mensal.",
+      "Neste momento, é importante substituir a mídia de backup mensal pelo disco de backup diário, dando continuidade à rotina diária e mantendo seus dados sempre atualizados e protegidos.",
+      "A não realização dessa troca impossibilita a execução do backup diário, colocando em risco a continuidade das suas operações.",
+      "Para esclarecimentos ou assistência, nossa equipe de suporte está à disposição."
+    ],
+    "aplicavel_a": [
+      "mensal"
+    ]
+  },
+  "FINALIZADO_ANUAL": {
+    "categoria": "sucesso",
+    "assunto": "{cliente} - Backup Anual Finalizado com Sucesso",
+    "titulo": "Conclusão da Rotina de Backup Anual",
+    "estilo": "marca",
+    "corpo": [
+      "Informamos que a rotina de fechamento e retenção de Backup Anual foi finalizada com sucesso e validada.",
+      "A mídia anual pode ser desconectada com segurança e armazenada no cofre ou local seguro de custódia.",
+      "Favor reconectar a mídia diária/semanal para dar sequência às rotinas periódicas.",
+      "Equipe Core TI Expert."
+    ],
+    "aplicavel_a": [
+      "anual"
+    ]
+  },
   "FALHA_DIARIO": {
     "categoria": "falha",
     "assunto": "{cliente} - Falha na Rotina de Backup Diário",
@@ -86,48 +233,18 @@
       "mensal"
     ]
   },
-  "INICIO_SEMANAL": {
-    "categoria": "info",
-    "assunto": "{cliente} - Início da Rotina de Backup Semanal",
-    "titulo": "Início da Rotina de Backup Semanal",
-    "estilo": "marca",
+  "FALHA_ANUAL": {
+    "categoria": "falha",
+    "assunto": "{cliente} - Falha na Rotina de Backup Anual",
+    "titulo": "Falha na Rotina de Backup Anual",
+    "estilo": "alerta",
     "corpo": [
-      "Informamos que o Departamento de Backup deu início às tarefas de backup realizadas de forma <strong>semanal</strong>. Gentilmente, solicitamos que insira a mídia de armazenamento correspondente, substituindo a utilizada no backup diário.",
-      "Destacamos a importância de zelar pela segurança e integridade dos dados da sua empresa: <strong>nunca mantenha dois ou mais discos de backup conectados simultaneamente</strong>. Ao trocar a mídia, retire a anterior antes de conectar a nova.",
-      "Em caso de dúvidas ou necessidade de assistência, pedimos que entre em contato conosco. Estamos à disposição."
+      "Informamos que a rotina de Backup Anual não pôde ser concluída devido à indisponibilidade da mídia ou erro de leitura.",
+      "Solicitamos verificar a conexão do disco rígido anual para que possamos reexecutar o processo sem prejuízo à segurança dos dados.",
+      "Nossa equipe de suporte está à disposição."
     ],
     "aplicavel_a": [
-      "semanal"
-    ]
-  },
-  "FINALIZADO_SEMANAL": {
-    "categoria": "sucesso",
-    "assunto": "{cliente} - Backup Semanal Finalizado",
-    "titulo": "Conclusão da Rotina de Backup Semanal",
-    "estilo": "marca",
-    "corpo": [
-      "É com satisfação que informamos a conclusão bem-sucedida da nossa rotina de backup semanal.",
-      "Neste momento, é importante substituir a mídia de backup semanal pelo disco de backup diário, dando continuidade à rotina diária e mantendo seus dados sempre atualizados e protegidos.",
-      "A não realização dessa troca impossibilita a execução do backup diário, colocando em risco a continuidade das suas operações.",
-      "Para esclarecimentos ou assistência, nossa equipe de suporte está à disposição."
-    ],
-    "aplicavel_a": [
-      "semanal"
-    ]
-  },
-  "FINALIZADO_MENSAL": {
-    "categoria": "sucesso",
-    "assunto": "{cliente} - Backup Mensal Finalizado",
-    "titulo": "Conclusão da Rotina de Backup Mensal",
-    "estilo": "marca",
-    "corpo": [
-      "É com satisfação que informamos a conclusão bem-sucedida da nossa rotina de backup mensal.",
-      "Neste momento, é importante substituir a mídia de backup mensal pelo disco de backup diário, dando continuidade à rotina diária e mantendo seus dados sempre atualizados e protegidos.",
-      "A não realização dessa troca impossibilita a execução do backup diário, colocando em risco a continuidade das suas operações.",
-      "Para esclarecimentos ou assistência, nossa equipe de suporte está à disposição."
-    ],
-    "aplicavel_a": [
-      "mensal"
+      "anual"
     ]
   }
 }

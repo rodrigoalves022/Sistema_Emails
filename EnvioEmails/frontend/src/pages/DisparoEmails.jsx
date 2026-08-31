@@ -16,13 +16,62 @@ import {
   Eye,
   Check,
   X,
-  Sparkles,
-  Layers,
-  Filter,
+  PlayCircle,
+  AlertCircle,
+  Disc,
 } from 'lucide-react';
 import { api } from '../api';
 import { useToast } from '../components/Toast';
 import Modal from '../components/Modal';
+
+// Catálogo organizado de disparos com suas respectivas chaves de template e rotinas associadas
+const DISPATCH_PRESETS = [
+  {
+    group: 'Solicitações de Troca de Disco',
+    icon: Disc,
+    color: '#00B39B',
+    items: [
+      { id: 'DISCO_SEMANAL', routine: 'semanal', label: 'Troca de Disco — Semanal', badge: 'Semanal' },
+      { id: 'DISCO_DIARIO', routine: 'diario', label: 'Troca de Disco — Diário', badge: 'Diário' },
+      { id: 'DISCO_MENSAL', routine: 'mensal', label: 'Troca de Disco — Mensal', badge: 'Mensal' },
+      { id: 'DISCO_ANUAL', routine: 'anual', label: 'Troca de Disco — Anual', badge: 'Anual' },
+    ],
+  },
+  {
+    group: 'Início de Rotinas de Backup',
+    icon: PlayCircle,
+    color: '#38BDF8',
+    items: [
+      { id: 'INICIO_SEMANAL', routine: 'semanal', label: 'Início de Rotina — Semanal', badge: 'Semanal' },
+      { id: 'INICIO_MENSAL', routine: 'mensal', label: 'Início de Rotina — Mensal', badge: 'Mensal' },
+      { id: 'INICIO_ANUAL', routine: 'anual', label: 'Início de Rotina — Anual', badge: 'Anual' },
+      { id: 'INICIO_DIARIO', routine: 'diario', label: 'Início de Rotina — Diário', badge: 'Diário' },
+      { id: 'INICIO_CLOUD', routine: 'cloud', label: 'Início de Rotina — Cloud', badge: 'Cloud' },
+    ],
+  },
+  {
+    group: 'Conclusão de Rotinas',
+    icon: CheckCircle2,
+    color: '#10B981',
+    items: [
+      { id: 'FINALIZADO_SEMANAL', routine: 'semanal', label: 'Conclusão — Semanal', badge: 'Semanal' },
+      { id: 'FINALIZADO_MENSAL', routine: 'mensal', label: 'Conclusão — Mensal', badge: 'Mensal' },
+      { id: 'FINALIZADO_ANUAL', routine: 'anual', label: 'Conclusão — Anual', badge: 'Anual' },
+      { id: 'FINALIZADO_DIARIO', routine: 'diario', label: 'Conclusão — Diário', badge: 'Diário' },
+    ],
+  },
+  {
+    group: 'Avisos de Falha de Backup',
+    icon: AlertTriangle,
+    color: '#EF4444',
+    items: [
+      { id: 'FALHA_SEMANAL', routine: 'semanal', label: 'Falha de Backup — Semanal', badge: 'Semanal' },
+      { id: 'FALHA_MENSAL', routine: 'mensal', label: 'Falha de Backup — Mensal', badge: 'Mensal' },
+      { id: 'FALHA_DIARIO', routine: 'diario', label: 'Falha de Backup — Diário', badge: 'Diário' },
+      { id: 'FALHA_ANUAL', routine: 'anual', label: 'Falha de Backup — Anual', badge: 'Anual' },
+    ],
+  },
+];
 
 export default function DisparoEmails() {
   const navigate = useNavigate();
@@ -32,11 +81,8 @@ export default function DisparoEmails() {
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Multi-Seleção de Rotinas de Backup
-  // Array de strings: ['semanal', 'diario', 'mensal', 'cloud', 'anual']
-  const [selectedBackupRoutines, setSelectedBackupRoutines] = useState(['semanal']);
-  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('todas'); // 'todas' | 'solicitacao_disco' | 'inicio_rotina' | 'finalizacao' | 'falha'
-  const [selectedTemplateId, setSelectedTemplateId] = useState('');
+  // Ação de disparo atualmente selecionada
+  const [selectedActionKey, setSelectedActionKey] = useState('DISCO_SEMANAL');
   const [busca, setBusca] = useState('');
 
   // Seleção de Empresas (IDs)
@@ -47,7 +93,7 @@ export default function DisparoEmails() {
   const [sendResult, setSendResult] = useState(null);
 
   // Modal Pré-visualização do Modelo
-  const [previewTemplate, setPreviewTemplate] = useState(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -58,10 +104,6 @@ export default function DisparoEmails() {
       ]);
       setClientes(clientData);
       setTemplates(tplData);
-
-      if (tplData.length > 0 && !selectedTemplateId) {
-        setSelectedTemplateId(tplData[0].id);
-      }
     } catch (err) {
       addToast(err.message || 'Erro ao carregar clientes e templates', 'error');
     } finally {
@@ -73,75 +115,38 @@ export default function DisparoEmails() {
     fetchData();
   }, []);
 
-  // Contagem de clientes por tipo de backup
-  const counts = useMemo(() => {
-    const ativas = clientes.filter((c) => c.status === 'ativo');
-    return {
-      semanal: ativas.filter((c) => (c.tipos_backup || []).includes('semanal')).length,
-      diario: ativas.filter((c) => (c.tipos_backup || []).includes('diario')).length,
-      mensal: ativas.filter((c) => (c.tipos_backup || []).includes('mensal')).length,
-      cloud: ativas.filter((c) => (c.tipos_backup || []).includes('cloud')).length,
-      anual: ativas.filter((c) => (c.tipos_backup || []).includes('anual')).length,
-      todos: ativas.length,
-    };
-  }, [clientes]);
-
-  // Alterna rotina no multi-select de rotinas
-  const toggleRoutine = (routineKey) => {
-    if (routineKey === 'todos') {
-      if (selectedBackupRoutines.length === 5) {
-        setSelectedBackupRoutines(['semanal']); // fallback para semanal
-      } else {
-        setSelectedBackupRoutines(['semanal', 'diario', 'mensal', 'cloud', 'anual']);
-      }
-      return;
+  // Encontra a configuração da ação selecionada
+  const currentAction = useMemo(() => {
+    for (const group of DISPATCH_PRESETS) {
+      const item = group.items.find((i) => i.id === selectedActionKey);
+      if (item) return { ...item, groupName: group.group, groupColor: group.color };
     }
+    return DISPATCH_PRESETS[0].items[0];
+  }, [selectedActionKey]);
 
-    setSelectedBackupRoutines((prev) => {
-      const exists = prev.includes(routineKey);
-      if (exists) {
-        // Não deixa lista vazia
-        const filtered = prev.filter((k) => k !== routineKey);
-        return filtered.length > 0 ? filtered : [routineKey];
-      } else {
-        return [...prev, routineKey];
-      }
-    });
-
-    // Auto-seleciona template relacionado caso exista
-    const matchingTpl = templates.find(
-      (t) => t.tipo_backup_relacionado?.toLowerCase() === routineKey.toLowerCase()
+  // Encontra o template correspondente no banco de dados
+  const currentTemplate = useMemo(() => {
+    return (
+      templates.find((t) => t.chave === selectedActionKey) ||
+      templates.find((t) => t.tipo_backup_relacionado?.toLowerCase() === currentAction.routine.toLowerCase()) ||
+      templates[0] ||
+      null
     );
-    if (matchingTpl) {
-      setSelectedTemplateId(matchingTpl.id);
-    }
-  };
+  }, [templates, selectedActionKey, currentAction]);
 
-  // Templates filtrados pela categoria selecionada
-  const templatesFiltrados = useMemo(() => {
-    if (selectedCategoryFilter === 'todas') return templates;
-    return templates.filter((t) => {
-      const cat = (t.categoria || '').toLowerCase();
-      return cat.includes(selectedCategoryFilter.toLowerCase()) || (t.tipo_email || '').toLowerCase().includes(selectedCategoryFilter.toLowerCase());
-    });
-  }, [templates, selectedCategoryFilter]);
-
-  // Lista de empresas filtradas conforme as rotinas ativas selecionadas e busca
+  // FILTRAGEM ESTRITA DE CLIENTES: Apenas clientes com a rotina da ação ATIVA no cadastro
   const empresasFiltradas = useMemo(() => {
+    const targetRoutine = currentAction.routine.toLowerCase();
     return clientes.filter((c) => {
       if (c.status !== 'ativo') return false;
 
-      // Filtro de Backup: cliente precisa ter pelo menos UMA das rotinas selecionadas
-      const clientTypes = (c.tipos_backup || []).map((t) => t.toLowerCase());
-      const hasAnySelectedRoutine = selectedBackupRoutines.some((r) =>
-        clientTypes.includes(r.toLowerCase())
-      );
-
-      if (!hasAnySelectedRoutine && selectedBackupRoutines.length < 5) {
+      // Verifica se o cliente possui essa rotina de backup ativa
+      const bTypes = (c.tipos_backup || []).map((t) => t.toLowerCase());
+      if (!bTypes.includes(targetRoutine)) {
         return false;
       }
 
-      // Busca textual
+      // Busca textual por nome, responsável ou email
       if (busca.trim()) {
         const q = busca.toLowerCase();
         const matchNome = c.nome?.toLowerCase().includes(q);
@@ -152,12 +157,12 @@ export default function DisparoEmails() {
 
       return true;
     });
-  }, [clientes, selectedBackupRoutines, busca]);
+  }, [clientes, currentAction, busca]);
 
-  // Sincroniza a seleção padrão quando as rotinas ou clientes mudam
+  // Ao mudar de ação, auto-seleciona todas as empresas que têm essa rotina
   useEffect(() => {
     setSelectedIds(empresasFiltradas.map((e) => e.id));
-  }, [selectedBackupRoutines, clientes]);
+  }, [selectedActionKey, clientes]);
 
   const toggleSelectOne = (id) => {
     setSelectedIds((prev) =>
@@ -178,38 +183,29 @@ export default function DisparoEmails() {
     setSelectedIds((prev) => allFilteredIds.filter((id) => !prev.includes(id)));
   };
 
-  // Template atualmente selecionado
-  const currentTemplate = useMemo(() => {
-    return templates.find((t) => t.id === parseInt(selectedTemplateId, 10)) || null;
-  }, [templates, selectedTemplateId]);
-
-  // Disparo em Lote Imediato
+  // Disparo em Lote
   const handleExecuteBulkSend = async () => {
     if (selectedIds.length === 0) {
       addToast('Selecione ao menos um cliente para disparar o e-mail.', 'warning');
       return;
     }
-    if (!selectedTemplateId) {
-      addToast('Selecione um template de e-mail.', 'warning');
+    if (!currentTemplate) {
+      addToast('Template de e-mail não encontrado.', 'warning');
       return;
     }
 
-    const tplName = currentTemplate?.nome || 'Template Selecionado';
-    const rotinasStr = selectedBackupRoutines.map((r) => r.toUpperCase()).join(', ');
-
-    const confirmMsg = `Confirmar o disparo imediato via SMTP para ${selectedIds.length} clientes selecionados?\n\n- Rotinas filtradas: ${rotinasStr}\n- Template: ${tplName}\n- Envio: 1 e-mail individual por empresa`;
+    const confirmMsg = `Confirma o disparo imediato via SMTP?\n\n- Ação: ${currentAction.label}\n- Rotina: Backup ${currentAction.routine.toUpperCase()}\n- Destinatários: ${selectedIds.length} clientes (1 e-mail individual por empresa)`;
     if (!window.confirm(confirmMsg)) return;
 
     try {
       setIsSending(true);
       setSendResult(null);
 
-      const primaryRoutine = selectedBackupRoutines[0] || 'semanal';
       const payload = {
         empresa_ids: selectedIds,
-        tipo_backup: primaryRoutine.charAt(0).toUpperCase() + primaryRoutine.slice(1),
-        tipo_email: currentTemplate?.categoria || 'solicitacao_disco',
-        template_id: parseInt(selectedTemplateId, 10),
+        tipo_backup: currentAction.routine.charAt(0).toUpperCase() + currentAction.routine.slice(1),
+        tipo_email: currentTemplate.categoria || 'solicitacao_disco',
+        template_id: currentTemplate.id,
         enviar_agora: true,
       };
 
@@ -218,32 +214,22 @@ export default function DisparoEmails() {
 
       if (res.total_sucesso > 0) {
         addToast(
-          `Disparo concluído com sucesso! ${res.total_sucesso} e-mail(s) entregues via SMTP (${res.total_erros} erros).`,
+          `Disparo concluído com sucesso! ${res.total_sucesso} e-mails entregues via SMTP (${res.total_erros} falhas).`,
           res.total_erros > 0 ? 'warning' : 'success'
         );
       } else {
-        addToast('Falha no disparo de e-mails. Verifique as configurações SMTP.', 'error');
+        addToast('Falha no disparo. Verifique as configurações de SMTP.', 'error');
       }
     } catch (err) {
-      addToast(err.message || 'Erro ao realizar disparo em lote', 'error');
+      addToast(err.message || 'Erro ao realizar disparo', 'error');
     } finally {
       setIsSending(false);
     }
   };
 
-  const backupOptions = [
-    { key: 'semanal', label: 'Semanal', icon: '⚡', count: counts.semanal },
-    { key: 'diario', label: 'Diário', icon: '📅', count: counts.diario },
-    { key: 'mensal', label: 'Mensal', icon: '📆', count: counts.mensal },
-    { key: 'cloud', label: 'Cloud', icon: '☁️', count: counts.cloud },
-    { key: 'anual', label: 'Anual', icon: '🗓️', count: counts.anual },
-  ];
-
-  const allSelected = selectedBackupRoutines.length === 5;
-
   return (
     <div className="page-container">
-      {/* Header */}
+      {/* Header Principal */}
       <div className="page-header">
         <div>
           <h1 className="page-title">
@@ -251,7 +237,7 @@ export default function DisparoEmails() {
             <span>Disparo Direto de E-mails</span>
           </h1>
           <p className="page-subtitle">
-            Selecione uma ou mais rotinas de backup, escolha o modelo e dispare instantaneamente para todos os clientes selecionados via SMTP.
+            Selecione o tipo de comunicado e envie instantaneamente via SMTP. O sistema filtra automaticamente apenas os clientes que possuem essa rotina ativa.
           </p>
         </div>
 
@@ -270,166 +256,136 @@ export default function DisparoEmails() {
         </button>
       </div>
 
-      {/* 1. SELEÇÃO DE ROTINAS DE BACKUP (MULTI-SELECT INTUITIVO) */}
-      <div className="card-panel" style={{ marginBottom: '20px', padding: '18px 20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '10px' }}>
-          <div>
-            <span style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--text-primary)' }}>
-              1. Filtrar por Rotinas de Backup Contratadas (Multi-Seleção):
-            </span>
-            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
-              Você pode selecionar uma ou várias rotinas simultaneamente para abranger múltiplos perfis de clientes.
-            </p>
-          </div>
-
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button
-              type="button"
-              className={`btn btn-sm ${allSelected ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => toggleRoutine('todos')}
-            >
-              <Users size={14} />
-              <span>Todos os Clientes ({counts.todos})</span>
-            </button>
-          </div>
+      {/* 1. SELEÇÃO DIRETA DO TIPO DE COMUNICADO (AGRUPADO E INTUITIVO) */}
+      <div className="card-panel" style={{ marginBottom: '20px', padding: '20px' }}>
+        <div style={{ marginBottom: '14px' }}>
+          <h3 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+            1. Selecione o E-mail que deseja disparar:
+          </h3>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px', marginBottom: 0 }}>
+            Clique na ação desejada. O sistema seleciona o modelo e filtra estritamente as empresas corretas.
+          </p>
         </div>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-          {backupOptions.map((opt) => {
-            const isSelected = selectedBackupRoutines.includes(opt.key);
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          {DISPATCH_PRESETS.map((group) => {
+            const GroupIcon = group.icon;
             return (
-              <button
-                key={opt.key}
-                type="button"
-                onClick={() => toggleRoutine(opt.key)}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '10px 18px',
-                  borderRadius: '8px',
-                  fontSize: '13.5px',
-                  fontWeight: isSelected ? 700 : 500,
-                  cursor: 'pointer',
-                  border: isSelected ? '1px solid var(--brand-teal)' : '1px solid var(--border-card)',
-                  background: isSelected ? 'rgba(0, 179, 155, 0.16)' : 'var(--bg-app)',
-                  color: isSelected ? 'var(--brand-teal)' : 'var(--text-secondary)',
-                  transition: 'all 0.15s ease',
-                  boxShadow: isSelected ? '0 0 10px rgba(0, 179, 155, 0.2)' : 'none',
-                }}
-              >
-                <span>{opt.icon}</span>
-                <span>{opt.label}</span>
-                <span
-                  style={{
-                    background: isSelected ? 'var(--brand-teal)' : 'var(--bg-card)',
-                    color: isSelected ? '#000' : 'var(--text-muted)',
-                    padding: '2px 8px',
-                    borderRadius: '12px',
-                    fontSize: '11px',
-                    fontWeight: 800,
-                  }}
-                >
-                  {opt.count}
-                </span>
-                {isSelected && <Check size={14} color="var(--brand-teal)" />}
-              </button>
+              <div key={group.group}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                  <GroupIcon size={14} color={group.color} />
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    {group.group}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {group.items.map((item) => {
+                    const isSelected = selectedActionKey === item.id;
+                    const routineCount = clientes.filter(
+                      (c) => c.status === 'ativo' && (c.tipos_backup || []).includes(item.routine)
+                    ).length;
+
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setSelectedActionKey(item.id)}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: '9px 14px',
+                          borderRadius: '8px',
+                          fontSize: '13px',
+                          fontWeight: isSelected ? 700 : 500,
+                          cursor: 'pointer',
+                          border: isSelected ? `1.5px solid ${group.color}` : '1px solid var(--border-card)',
+                          background: isSelected ? `${group.color}1F` : 'var(--bg-app)',
+                          color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)',
+                          transition: 'all 0.15s ease',
+                          boxShadow: isSelected ? `0 0 10px ${group.color}33` : 'none',
+                        }}
+                      >
+                        <span>{item.label}</span>
+                        <span
+                          style={{
+                            background: isSelected ? group.color : 'var(--bg-card)',
+                            color: isSelected ? '#000' : 'var(--text-muted)',
+                            padding: '2px 7px',
+                            borderRadius: '10px',
+                            fontSize: '11px',
+                            fontWeight: 800,
+                          }}
+                        >
+                          {routineCount}
+                        </span>
+                        {isSelected && <Check size={14} color={group.color} />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             );
           })}
         </div>
       </div>
 
-      {/* 2. SELEÇÃO FLEXÍVEL DE TEMPLATE E CATEGORIA */}
-      <div className="card-panel" style={{ marginBottom: '20px', padding: '18px 20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+      {/* 2. CARD DO MODELO CARREGADO COM PRÉ-VISUALIZAÇÃO */}
+      {currentTemplate && (
+        <div
+          style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-card)',
+            borderRadius: '8px',
+            padding: '16px 20px',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '12px',
+          }}
+        >
           <div>
-            <span style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--text-primary)' }}>
-              2. Escolha o Modelo / Template do E-mail:
-            </span>
-            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
-              Filtre por finalidade ou selecione diretamente na lista categorizada.
-            </p>
-          </div>
-
-          {/* Filtro Rápido de Categoria */}
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-            {[
-              { key: 'todas', label: 'Todos os Modelos' },
-              { key: 'solicitacao', label: 'Troca de Disco' },
-              { key: 'inicio', label: 'Início de Rotina' },
-              { key: 'finalizacao', label: 'Conclusão' },
-              { key: 'falha', label: 'Falha / Incidentes' },
-            ].map((cat) => (
-              <button
-                key={cat.key}
-                type="button"
-                className={`btn btn-sm ${selectedCategoryFilter === cat.key ? 'btn-primary' : 'btn-secondary'}`}
-                style={{ fontSize: '11.5px', padding: '4px 10px' }}
-                onClick={() => setSelectedCategoryFilter(cat.key)}
-              >
-                {cat.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Dropdown com Assunto & Preview */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px', alignItems: 'center' }}>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <select
-              className="form-control"
-              style={{ fontSize: '13.5px', padding: '10px 14px' }}
-              value={selectedTemplateId}
-              onChange={(e) => setSelectedTemplateId(e.target.value)}
-              required
-            >
-              {templatesFiltrados.map((tpl) => (
-                <option key={tpl.id} value={tpl.id}>
-                  [{tpl.categoria?.toUpperCase() || 'GERAL'}] {tpl.nome}
-                </option>
-              ))}
-            </select>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <span className="badge badge-normal" style={{ fontSize: '11px', textTransform: 'uppercase' }}>
+                Rotina: {currentAction.routine}
+              </span>
+              <strong style={{ fontSize: '14px', color: 'var(--text-primary)' }}>
+                {currentTemplate.nome}
+              </strong>
+            </div>
+            <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)' }}>
+              <strong>Assunto do E-mail:</strong>{' '}
+              <span style={{ color: '#38BDF8', fontFamily: 'var(--font-mono)' }}>
+                {currentTemplate.assunto}
+              </span>
+            </div>
           </div>
 
           <div style={{ display: 'flex', gap: '8px' }}>
             <button
               type="button"
-              className="btn btn-secondary"
-              style={{ flex: 1 }}
-              onClick={() => {
-                if (currentTemplate) setPreviewTemplate(currentTemplate);
-              }}
-              disabled={!currentTemplate}
+              className="btn btn-secondary btn-sm"
+              onClick={() => setIsPreviewOpen(true)}
             >
-              <Eye size={15} />
-              <span>Pré-visualizar E-mail</span>
+              <Eye size={14} />
+              <span>Ver Modelo Renderizado</span>
             </button>
-
-            {currentTemplate && (
-              <button
-                type="button"
-                className="btn btn-secondary btn-icon"
-                onClick={() => navigate(`/templates/${currentTemplate.id}`)}
-                title="Editar este template no editor"
-              >
-                <FileCode2 size={16} />
-              </button>
-            )}
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm btn-icon"
+              onClick={() => navigate(`/templates/${currentTemplate.id}`)}
+              title="Abrir no editor de HTML"
+            >
+              <FileCode2 size={14} />
+            </button>
           </div>
         </div>
+      )}
 
-        {/* Preview do Assunto */}
-        {currentTemplate && (
-          <div style={{ marginTop: '10px', fontSize: '12.5px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <strong>Assunto do E-mail:</strong>
-            <span style={{ color: '#38BDF8', fontFamily: 'var(--font-mono)' }}>
-              {currentTemplate.assunto || 'Não configurado'}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* 3. TOOLBAR DE SELEÇÃO E BUSCA */}
+      {/* 3. TOOLBAR DE SELEÇÃO E BUSCA DOS DESTINATÁRIOS */}
       <div
         style={{
           display: 'flex',
@@ -446,7 +402,7 @@ export default function DisparoEmails() {
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--text-primary)' }}>
-            {selectedIds.length} de {empresasFiltradas.length} empresas selecionadas
+            {selectedIds.length} de {empresasFiltradas.length} empresas com Backup {currentAction.routine.toUpperCase()} selecionadas
           </span>
           <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>|</span>
           <button
@@ -478,14 +434,14 @@ export default function DisparoEmails() {
           <input
             type="text"
             className="form-control form-control-sm"
-            placeholder="Buscar por empresa ou e-mail..."
+            placeholder="Buscar empresa ou e-mail..."
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
           />
         </div>
       </div>
 
-      {/* 4. TABELA DE EMPRESAS */}
+      {/* 4. TABELA DE DESTINATÁRIOS ELEGÍVEIS */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-muted)' }}>
           <RefreshCw className="spin" size={28} />
@@ -495,17 +451,11 @@ export default function DisparoEmails() {
         <div className="card-panel" style={{ textAlign: 'center', padding: '48px', color: 'var(--text-muted)' }}>
           <Users size={36} style={{ marginBottom: '12px', opacity: 0.4 }} />
           <h3 style={{ fontSize: '16px', color: 'var(--text-primary)', marginBottom: '4px' }}>
-            Nenhuma empresa encontrada com os filtros selecionados
+            Nenhuma empresa encontrada com rotina {currentAction.routine.toUpperCase()} ativa
           </h3>
-          <p style={{ fontSize: '13px', marginBottom: '16px' }}>
-            Experimente clicar em "Todos os Clientes" no topo.
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+            Selecione outro tipo de comunicado acima.
           </p>
-          <button
-            className="btn btn-secondary btn-sm"
-            onClick={() => toggleRoutine('todos')}
-          >
-            Ver Todos os Clientes ({counts.todos})
-          </button>
         </div>
       ) : (
         <div className="table-wrapper">
@@ -525,10 +475,10 @@ export default function DisparoEmails() {
                 </th>
                 <th>Empresa</th>
                 <th>Responsável</th>
-                <th>E-mail Destinatário (To:)</th>
+                <th>Destinatário Principal (To:)</th>
                 <th>Cópias (BCC:)</th>
-                <th>Rotinas de Backup Ativas</th>
-                <th style={{ textAlign: 'right' }}>Ações</th>
+                <th>Rotina Exigida</th>
+                <th style={{ textAlign: 'right' }}>Cadastro</th>
               </tr>
             </thead>
             <tbody>
@@ -561,7 +511,7 @@ export default function DisparoEmails() {
                           {c.email_principal}
                         </span>
                       ) : (
-                        <span style={{ color: '#F87171', fontSize: '12px' }}>⚠️ Sem e-mail cadastrado</span>
+                        <span style={{ color: '#F87171', fontSize: '12px' }}>⚠️ Sem e-mail</span>
                       )}
                     </td>
                     <td>
@@ -574,26 +524,15 @@ export default function DisparoEmails() {
                       )}
                     </td>
                     <td>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                        {c.tipos_backup?.map((tb) => {
-                          const isMatch = selectedBackupRoutines.includes(tb.toLowerCase());
-                          return (
-                            <span
-                              key={tb}
-                              className={`backup-tag ${isMatch ? 'active' : ''}`}
-                              style={{ fontSize: '10.5px' }}
-                            >
-                              {tb}
-                            </span>
-                          );
-                        })}
-                      </div>
+                      <span className="backup-tag active" style={{ fontSize: '11px', textTransform: 'uppercase' }}>
+                        ✓ {currentAction.routine}
+                      </span>
                     </td>
                     <td style={{ textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
                       <button
                         className="btn btn-secondary btn-sm"
                         onClick={() => navigate(`/clientes/${c.id}`)}
-                        title="Ver cadastro do cliente"
+                        title="Ver detalhes da empresa"
                       >
                         Ver Detalhes
                       </button>
@@ -607,25 +546,25 @@ export default function DisparoEmails() {
       )}
 
       {/* MODAL PRÉ-VISUALIZAÇÃO DO MODELO */}
-      {previewTemplate && (
+      {isPreviewOpen && currentTemplate && (
         <Modal
           isOpen={true}
-          onClose={() => setPreviewTemplate(null)}
-          title={`Visualização: ${previewTemplate.nome}`}
+          onClose={() => setIsPreviewOpen(false)}
+          title={`Visualização: ${currentTemplate.nome}`}
           maxWidth="700px"
           footer={
             <>
               <button
                 className="btn btn-secondary"
                 onClick={() => {
-                  const tId = previewTemplate.id;
-                  setPreviewTemplate(null);
+                  const tId = currentTemplate.id;
+                  setIsPreviewOpen(false);
                   navigate(`/templates/${tId}`);
                 }}
               >
                 Abrir no Editor
               </button>
-              <button className="btn btn-primary" onClick={() => setPreviewTemplate(null)}>
+              <button className="btn btn-primary" onClick={() => setIsPreviewOpen(false)}>
                 Fechar
               </button>
             </>
@@ -633,25 +572,25 @@ export default function DisparoEmails() {
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{ background: 'var(--bg-app)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-card)' }}>
-              <strong>Assunto:</strong> <span style={{ color: '#38BDF8' }}>{previewTemplate.assunto}</span>
+              <strong>Assunto:</strong> <span style={{ color: '#38BDF8' }}>{currentTemplate.assunto?.replace(/\{\{empresa\}\}/g, 'EXEMPLO EMPRESA LTDA')}</span>
             </div>
             <div
               style={{
                 background: '#FFFFFF',
                 color: '#1F2937',
-                padding: '20px',
+                padding: '24px',
                 borderRadius: '8px',
                 minHeight: '260px',
                 border: '1px solid #E5E7EB',
                 fontFamily: 'Inter, sans-serif',
               }}
               dangerouslySetInnerHTML={{
-                __html: previewTemplate.corpo_html
+                __html: currentTemplate.corpo_html
                   ?.replace(/\{\{empresa\}\}/g, 'EXEMPLO EMPRESA LTDA')
                   ?.replace(/\{\{responsavel\}\}/g, 'João da Silva')
-                  ?.replace(/\{\{tipo_backup\}\}/g, selectedBackupRoutines[0]?.toUpperCase() || 'SEMANAL')
+                  ?.replace(/\{\{tipo_backup\}\}/g, currentAction.routine.toUpperCase())
                   ?.replace(/\{\{data_limite\}\}/g, new Date().toLocaleDateString('pt-BR'))
-                  ?.replace(/\{\{observacoes\}\}/g, 'Rotina programada de backup'),
+                  ?.replace(/\{\{observacoes\}\}/g, 'Rotina operacional agendada'),
               }}
             />
           </div>
