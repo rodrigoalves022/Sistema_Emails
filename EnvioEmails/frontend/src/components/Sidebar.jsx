@@ -161,22 +161,28 @@ export default function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="sidebar-footer">
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Ambiente</span>
-          <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)' }}>
-            v2.0 • SMTP Ativo
-          </span>
+      <div className="sidebar-footer" style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '14px 16px', borderTop: '1px solid var(--border-subtle)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>Ambiente</span>
+            <span style={{ fontSize: '11.5px', fontWeight: '600', color: 'var(--text-primary)' }}>
+              v2.0 • SMTP Ativo
+            </span>
+          </div>
+          <div
+            style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: '#10B981',
+              boxShadow: '0 0 6px #10B981',
+            }}
+          />
         </div>
-        <div
-          style={{
-            width: '8px',
-            height: '8px',
-            borderRadius: '50%',
-            backgroundColor: '#10B981',
-            boxShadow: '0 0 6px #10B981',
-          }}
-        />
+        <div style={{ fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span>© {new Date().getFullYear()} <strong style={{ color: 'var(--text-primary)' }}>Rodrigo Alves</strong></span>
+          <span style={{ fontSize: '10px', color: 'var(--brand-teal)' }}>Core TI Expert</span>
+        </div>
       </div>
     </aside>
   );

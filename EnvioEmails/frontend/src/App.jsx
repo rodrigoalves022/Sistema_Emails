@@ -24,23 +24,28 @@ function AppLayout() {
       <Sidebar />
       <div className="main-content-wrapper">
         <Header />
-        <main style={{ flex: 1 }}>
-          <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/disparo" element={<DisparoEmails />} />
-            <Route path="/clientes" element={<Clientes />} />
-            <Route path="/clientes/:id" element={<ClienteDetalhe />} />
-            <Route path="/falhas" element={<Falhas />} />
-            <Route path="/agendamentos" element={<Agendamentos />} />
-            <Route path="/agendamentos/:id" element={<Agendamentos />} />
-            <Route path="/templates" element={<Templates />} />
-            <Route path="/templates/:id" element={<TemplateEditor />} />
-            <Route path="/emails" element={<Emails />} />
-            <Route path="/estatisticas" element={<Estatisticas />} />
-            <Route path="/configuracoes" element={<Configuracoes />} />
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
-          </Routes>
+        <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flex: 1 }}>
+            <Routes>
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/disparo" element={<DisparoEmails />} />
+              <Route path="/clientes" element={<Clientes />} />
+              <Route path="/clientes/:id" element={<ClienteDetalhe />} />
+              <Route path="/falhas" element={<Falhas />} />
+              <Route path="/agendamentos" element={<Agendamentos />} />
+              <Route path="/agendamentos/:id" element={<Agendamentos />} />
+              <Route path="/templates" element={<Templates />} />
+              <Route path="/templates/:id" element={<TemplateEditor />} />
+              <Route path="/emails" element={<Emails />} />
+              <Route path="/estatisticas" element={<Estatisticas />} />
+              <Route path="/configuracoes" element={<Configuracoes />} />
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            </Routes>
+          </div>
+          <footer style={{ textAlign: 'center', padding: '14px 24px', fontSize: '11.5px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-app)' }}>
+            <span>© {new Date().getFullYear()} <strong style={{ color: 'var(--text-primary)' }}>Rodrigo Alves</strong> • Core TI Expert • Todos os direitos reservados</span>
+          </footer>
         </main>
       </div>
     </div>
