@@ -16,61 +16,56 @@ import {
   Eye,
   Check,
   X,
-  PlayCircle,
-  AlertCircle,
-  Disc,
+  Sparkles,
 } from 'lucide-react';
 import { api } from '../api';
 import { useToast } from '../components/Toast';
 import Modal from '../components/Modal';
 
-// Catálogo organizado de disparos com suas respectivas chaves de template e rotinas associadas
-const DISPATCH_PRESETS = [
-  {
-    group: 'Solicitações de Troca de Disco',
-    icon: Disc,
-    color: '#00B39B',
-    items: [
-      { id: 'DISCO_SEMANAL', routine: 'semanal', label: 'Troca de Disco — Semanal', badge: 'Semanal' },
-      { id: 'DISCO_DIARIO', routine: 'diario', label: 'Troca de Disco — Diário', badge: 'Diário' },
-      { id: 'DISCO_MENSAL', routine: 'mensal', label: 'Troca de Disco — Mensal', badge: 'Mensal' },
-      { id: 'DISCO_ANUAL', routine: 'anual', label: 'Troca de Disco — Anual', badge: 'Anual' },
-    ],
-  },
-  {
-    group: 'Início de Rotinas de Backup',
-    icon: PlayCircle,
-    color: '#38BDF8',
-    items: [
-      { id: 'INICIO_SEMANAL', routine: 'semanal', label: 'Início de Rotina — Semanal', badge: 'Semanal' },
-      { id: 'INICIO_MENSAL', routine: 'mensal', label: 'Início de Rotina — Mensal', badge: 'Mensal' },
-      { id: 'INICIO_ANUAL', routine: 'anual', label: 'Início de Rotina — Anual', badge: 'Anual' },
-      { id: 'INICIO_DIARIO', routine: 'diario', label: 'Início de Rotina — Diário', badge: 'Diário' },
-      { id: 'INICIO_CLOUD', routine: 'cloud', label: 'Início de Rotina — Cloud', badge: 'Cloud' },
-    ],
-  },
-  {
-    group: 'Conclusão de Rotinas',
-    icon: CheckCircle2,
-    color: '#10B981',
-    items: [
-      { id: 'FINALIZADO_SEMANAL', routine: 'semanal', label: 'Conclusão — Semanal', badge: 'Semanal' },
-      { id: 'FINALIZADO_MENSAL', routine: 'mensal', label: 'Conclusão — Mensal', badge: 'Mensal' },
-      { id: 'FINALIZADO_ANUAL', routine: 'anual', label: 'Conclusão — Anual', badge: 'Anual' },
-      { id: 'FINALIZADO_DIARIO', routine: 'diario', label: 'Conclusão — Diário', badge: 'Diário' },
-    ],
-  },
-  {
-    group: 'Avisos de Falha de Backup',
-    icon: AlertTriangle,
-    color: '#EF4444',
-    items: [
-      { id: 'FALHA_SEMANAL', routine: 'semanal', label: 'Falha de Backup — Semanal', badge: 'Semanal' },
-      { id: 'FALHA_MENSAL', routine: 'mensal', label: 'Falha de Backup — Mensal', badge: 'Mensal' },
-      { id: 'FALHA_DIARIO', routine: 'diario', label: 'Falha de Backup — Diário', badge: 'Diário' },
-      { id: 'FALHA_ANUAL', routine: 'anual', label: 'Falha de Backup — Anual', badge: 'Anual' },
-    ],
-  },
+// Mapeamento direto de (Rotina + Finalidade) para a Chave de Template
+const TEMPLATE_MAP = {
+  // Troca de Disco / Solicitação
+  'semanal_troca': 'DISCO_SEMANAL',
+  'diario_troca': 'DISCO_DIARIO',
+  'mensal_troca': 'DISCO_MENSAL',
+  'anual_troca': 'DISCO_ANUAL',
+  'cloud_troca': 'INICIO_CLOUD',
+
+  // Início de Rotina
+  'semanal_inicio': 'INICIO_SEMANAL',
+  'diario_inicio': 'INICIO_DIARIO',
+  'mensal_inicio': 'INICIO_MENSAL',
+  'anual_inicio': 'INICIO_ANUAL',
+  'cloud_inicio': 'INICIO_CLOUD',
+
+  // Conclusão / Finalização
+  'semanal_conclusao': 'FINALIZADO_SEMANAL',
+  'diario_conclusao': 'FINALIZADO_DIARIO',
+  'mensal_conclusao': 'FINALIZADO_MENSAL',
+  'anual_conclusao': 'FINALIZADO_ANUAL',
+  'cloud_conclusao': 'INICIO_CLOUD',
+
+  // Avisos de Falha
+  'semanal_falha': 'FALHA_SEMANAL',
+  'diario_falha': 'FALHA_DIARIO',
+  'mensal_falha': 'FALHA_MENSAL',
+  'anual_falha': 'FALHA_ANUAL',
+  'cloud_falha': 'FALHA_DIARIO',
+};
+
+const ROTINAS = [
+  { id: 'semanal', label: 'Semanal', icon: '⚡' },
+  { id: 'diario', label: 'Diário', icon: '📅' },
+  { id: 'mensal', label: 'Mensal', icon: '📆' },
+  { id: 'anual', label: 'Anual', icon: '🗓️' },
+  { id: 'cloud', label: 'Cloud', icon: '☁️' },
+];
+
+const FINALIDADES = [
+  { id: 'troca', label: 'Troca de Disco' },
+  { id: 'inicio', label: 'Início de Rotina' },
+  { id: 'conclusao', label: 'Conclusão' },
+  { id: 'falha', label: 'Aviso de Falha' },
 ];
 
 export default function DisparoEmails() {
@@ -81,8 +76,9 @@ export default function DisparoEmails() {
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Ação de disparo atualmente selecionada
-  const [selectedActionKey, setSelectedActionKey] = useState('DISCO_SEMANAL');
+  // Filtros Compactos: 1. Rotina de Backup + 2. Finalidade da Mensagem
+  const [selectedRoutine, setSelectedRoutine] = useState('semanal');
+  const [selectedFinalidade, setSelectedFinalidade] = useState('troca');
   const [busca, setBusca] = useState('');
 
   // Seleção de Empresas (IDs)
@@ -105,7 +101,7 @@ export default function DisparoEmails() {
       setClientes(clientData);
       setTemplates(tplData);
     } catch (err) {
-      addToast(err.message || 'Erro ao carregar clientes e templates', 'error');
+      addToast(err.message || 'Erro ao carregar dados', 'error');
     } finally {
       setLoading(false);
     }
@@ -115,38 +111,34 @@ export default function DisparoEmails() {
     fetchData();
   }, []);
 
-  // Encontra a configuração da ação selecionada
-  const currentAction = useMemo(() => {
-    for (const group of DISPATCH_PRESETS) {
-      const item = group.items.find((i) => i.id === selectedActionKey);
-      if (item) return { ...item, groupName: group.group, groupColor: group.color };
-    }
-    return DISPATCH_PRESETS[0].items[0];
-  }, [selectedActionKey]);
+  // Determina a chave do template atual a partir da combinação (Rotina + Finalidade)
+  const currentTemplateKey = useMemo(() => {
+    const key = `${selectedRoutine}_${selectedFinalidade}`;
+    return TEMPLATE_MAP[key] || 'DISCO_SEMANAL';
+  }, [selectedRoutine, selectedFinalidade]);
 
-  // Encontra o template correspondente no banco de dados
+  // Carrega o objeto do template correspondente do banco
   const currentTemplate = useMemo(() => {
     return (
-      templates.find((t) => t.chave === selectedActionKey) ||
-      templates.find((t) => t.tipo_backup_relacionado?.toLowerCase() === currentAction.routine.toLowerCase()) ||
+      templates.find((t) => t.chave === currentTemplateKey) ||
+      templates.find((t) => t.tipo_backup_relacionado?.toLowerCase() === selectedRoutine) ||
       templates[0] ||
       null
     );
-  }, [templates, selectedActionKey, currentAction]);
+  }, [templates, currentTemplateKey, selectedRoutine]);
 
-  // FILTRAGEM ESTRITA DE CLIENTES: Apenas clientes com a rotina da ação ATIVA no cadastro
+  // FILTRO ESTRITO DE CLIENTES: Apenas clientes com a rotina selecionada ATIVA
   const empresasFiltradas = useMemo(() => {
-    const targetRoutine = currentAction.routine.toLowerCase();
     return clientes.filter((c) => {
       if (c.status !== 'ativo') return false;
 
-      // Verifica se o cliente possui essa rotina de backup ativa
+      // Verifica se o cliente tem essa rotina contratada
       const bTypes = (c.tipos_backup || []).map((t) => t.toLowerCase());
-      if (!bTypes.includes(targetRoutine)) {
+      if (!bTypes.includes(selectedRoutine)) {
         return false;
       }
 
-      // Busca textual por nome, responsável ou email
+      // Busca textual
       if (busca.trim()) {
         const q = busca.toLowerCase();
         const matchNome = c.nome?.toLowerCase().includes(q);
@@ -157,12 +149,12 @@ export default function DisparoEmails() {
 
       return true;
     });
-  }, [clientes, currentAction, busca]);
+  }, [clientes, selectedRoutine, busca]);
 
-  // Ao mudar de ação, auto-seleciona todas as empresas que têm essa rotina
+  // Auto-seleciona todas as empresas filtradas quando a rotina muda
   useEffect(() => {
     setSelectedIds(empresasFiltradas.map((e) => e.id));
-  }, [selectedActionKey, clientes]);
+  }, [selectedRoutine, clientes]);
 
   const toggleSelectOne = (id) => {
     setSelectedIds((prev) =>
@@ -183,7 +175,7 @@ export default function DisparoEmails() {
     setSelectedIds((prev) => allFilteredIds.filter((id) => !prev.includes(id)));
   };
 
-  // Disparo em Lote
+  // Disparo em Lote Imediato
   const handleExecuteBulkSend = async () => {
     if (selectedIds.length === 0) {
       addToast('Selecione ao menos um cliente para disparar o e-mail.', 'warning');
@@ -194,7 +186,10 @@ export default function DisparoEmails() {
       return;
     }
 
-    const confirmMsg = `Confirma o disparo imediato via SMTP?\n\n- Ação: ${currentAction.label}\n- Rotina: Backup ${currentAction.routine.toUpperCase()}\n- Destinatários: ${selectedIds.length} clientes (1 e-mail individual por empresa)`;
+    const rotinaNome = selectedRoutine.toUpperCase();
+    const finalidadeNome = FINALIDADES.find((f) => f.id === selectedFinalidade)?.label || '';
+
+    const confirmMsg = `Disparar agora via SMTP para ${selectedIds.length} clientes?\n\n- Rotina: Backup ${rotinaNome}\n- Tipo: ${finalidadeNome}\n- Modelo: ${currentTemplate.nome}\n- Envio: 1 e-mail individual por empresa`;
     if (!window.confirm(confirmMsg)) return;
 
     try {
@@ -203,7 +198,7 @@ export default function DisparoEmails() {
 
       const payload = {
         empresa_ids: selectedIds,
-        tipo_backup: currentAction.routine.charAt(0).toUpperCase() + currentAction.routine.slice(1),
+        tipo_backup: selectedRoutine.charAt(0).toUpperCase() + selectedRoutine.slice(1),
         tipo_email: currentTemplate.categoria || 'solicitacao_disco',
         template_id: currentTemplate.id,
         enviar_agora: true,
@@ -214,14 +209,14 @@ export default function DisparoEmails() {
 
       if (res.total_sucesso > 0) {
         addToast(
-          `Disparo concluído com sucesso! ${res.total_sucesso} e-mails entregues via SMTP (${res.total_erros} falhas).`,
+          `Disparo concluído! ${res.total_sucesso} e-mail(s) entregues via SMTP (${res.total_erros} erros).`,
           res.total_erros > 0 ? 'warning' : 'success'
         );
       } else {
         addToast('Falha no disparo. Verifique as configurações de SMTP.', 'error');
       }
     } catch (err) {
-      addToast(err.message || 'Erro ao realizar disparo', 'error');
+      addToast(err.message || 'Erro ao processar disparo', 'error');
     } finally {
       setIsSending(false);
     }
@@ -229,15 +224,15 @@ export default function DisparoEmails() {
 
   return (
     <div className="page-container">
-      {/* Header Principal */}
-      <div className="page-header">
+      {/* Header */}
+      <div className="page-header" style={{ marginBottom: '16px' }}>
         <div>
           <h1 className="page-title">
             <Send size={22} color="var(--brand-teal)" />
             <span>Disparo Direto de E-mails</span>
           </h1>
           <p className="page-subtitle">
-            Selecione o tipo de comunicado e envie instantaneamente via SMTP. O sistema filtra automaticamente apenas os clientes que possuem essa rotina ativa.
+            Selecione a rotina e o tipo de mensagem para envio imediato via SMTP aos clientes com rotina ativa.
           </p>
         </div>
 
@@ -256,136 +251,142 @@ export default function DisparoEmails() {
         </button>
       </div>
 
-      {/* 1. SELEÇÃO DIRETA DO TIPO DE COMUNICADO (AGRUPADO E INTUITIVO) */}
-      <div className="card-panel" style={{ marginBottom: '20px', padding: '20px' }}>
-        <div style={{ marginBottom: '14px' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-            1. Selecione o E-mail que deseja disparar:
-          </h3>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px', marginBottom: 0 }}>
-            Clique na ação desejada. O sistema seleciona o modelo e filtra estritamente as empresas corretas.
-          </p>
-        </div>
+      {/* FILTROS COMPACTOS: ROTINA + TIPO DE MENSAGEM */}
+      <div
+        className="card-panel"
+        style={{
+          marginBottom: '16px',
+          padding: '16px 20px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '14px',
+        }}
+      >
+        {/* Linha 1: Rotina de Backup */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-secondary)', minWidth: '130px' }}>
+            Rotina de Backup:
+          </span>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            {ROTINAS.map((r) => {
+              const isActive = selectedRoutine === r.id;
+              const count = clientes.filter(
+                (c) => c.status === 'ativo' && (c.tipos_backup || []).includes(r.id)
+              ).length;
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          {DISPATCH_PRESETS.map((group) => {
-            const GroupIcon = group.icon;
-            return (
-              <div key={group.group}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                  <GroupIcon size={14} color={group.color} />
-                  <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                    {group.group}
+              return (
+                <button
+                  key={r.id}
+                  type="button"
+                  onClick={() => setSelectedRoutine(r.id)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '7px 14px',
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                    fontWeight: isActive ? 700 : 500,
+                    cursor: 'pointer',
+                    border: isActive ? '1px solid var(--brand-teal)' : '1px solid var(--border-card)',
+                    background: isActive ? 'rgba(0, 179, 155, 0.15)' : 'var(--bg-app)',
+                    color: isActive ? 'var(--brand-teal)' : 'var(--text-primary)',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <span>{r.icon}</span>
+                  <span>{r.label}</span>
+                  <span
+                    style={{
+                      background: isActive ? 'var(--brand-teal)' : 'var(--bg-card)',
+                      color: isActive ? '#000' : 'var(--text-muted)',
+                      padding: '1px 6px',
+                      borderRadius: '10px',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                    }}
+                  >
+                    {count}
                   </span>
-                </div>
-
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {group.items.map((item) => {
-                    const isSelected = selectedActionKey === item.id;
-                    const routineCount = clientes.filter(
-                      (c) => c.status === 'ativo' && (c.tipos_backup || []).includes(item.routine)
-                    ).length;
-
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => setSelectedActionKey(item.id)}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                          padding: '9px 14px',
-                          borderRadius: '8px',
-                          fontSize: '13px',
-                          fontWeight: isSelected ? 700 : 500,
-                          cursor: 'pointer',
-                          border: isSelected ? `1.5px solid ${group.color}` : '1px solid var(--border-card)',
-                          background: isSelected ? `${group.color}1F` : 'var(--bg-app)',
-                          color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)',
-                          transition: 'all 0.15s ease',
-                          boxShadow: isSelected ? `0 0 10px ${group.color}33` : 'none',
-                        }}
-                      >
-                        <span>{item.label}</span>
-                        <span
-                          style={{
-                            background: isSelected ? group.color : 'var(--bg-card)',
-                            color: isSelected ? '#000' : 'var(--text-muted)',
-                            padding: '2px 7px',
-                            borderRadius: '10px',
-                            fontSize: '11px',
-                            fontWeight: 800,
-                          }}
-                        >
-                          {routineCount}
-                        </span>
-                        {isSelected && <Check size={14} color={group.color} />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 2. CARD DO MODELO CARREGADO COM PRÉ-VISUALIZAÇÃO */}
-      {currentTemplate && (
-        <div
-          style={{
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-card)',
-            borderRadius: '8px',
-            padding: '16px 20px',
-            marginBottom: '20px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '12px',
-          }}
-        >
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-              <span className="badge badge-normal" style={{ fontSize: '11px', textTransform: 'uppercase' }}>
-                Rotina: {currentAction.routine}
-              </span>
-              <strong style={{ fontSize: '14px', color: 'var(--text-primary)' }}>
-                {currentTemplate.nome}
-              </strong>
-            </div>
-            <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)' }}>
-              <strong>Assunto do E-mail:</strong>{' '}
-              <span style={{ color: '#38BDF8', fontFamily: 'var(--font-mono)' }}>
-                {currentTemplate.assunto}
-              </span>
-            </div>
+                </button>
+              );
+            })}
           </div>
+        </div>
 
-          <div style={{ display: 'flex', gap: '8px' }}>
+        {/* Linha 2: Tipo de Mensagem / Finalidade */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', borderTop: '1px solid var(--border-subtle)', paddingTop: '12px' }}>
+          <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-secondary)', minWidth: '130px' }}>
+            Tipo de Mensagem:
+          </span>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            {FINALIDADES.map((f) => {
+              const isActive = selectedFinalidade === f.id;
+              return (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => setSelectedFinalidade(f.id)}
+                  style={{
+                    padding: '7px 16px',
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                    fontWeight: isActive ? 700 : 500,
+                    cursor: 'pointer',
+                    border: isActive ? '1px solid #38BDF8' : '1px solid var(--border-card)',
+                    background: isActive ? 'rgba(56, 189, 248, 0.15)' : 'var(--bg-app)',
+                    color: isActive ? '#38BDF8' : 'var(--text-primary)',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  {f.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Linha 3: Resumo Compacto do Template & Assunto */}
+        {currentTemplate && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              background: 'var(--bg-app)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: '6px',
+              padding: '8px 14px',
+              fontSize: '12.5px',
+              flexWrap: 'wrap',
+              gap: '8px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <span className="badge badge-normal" style={{ fontSize: '10.5px', textTransform: 'uppercase' }}>
+                {selectedRoutine}
+              </span>
+              <strong style={{ color: 'var(--text-primary)' }}>{currentTemplate.nome}</strong>
+              <span style={{ color: 'var(--text-muted)' }}>•</span>
+              <span style={{ color: '#38BDF8', fontFamily: 'var(--font-mono)' }}>
+                {currentTemplate.assunto?.replace(/\{\{empresa\}\}/g, 'NOME DA EMPRESA')}
+              </span>
+            </div>
+
             <button
               type="button"
               className="btn btn-secondary btn-sm"
+              style={{ fontSize: '11.5px', padding: '3px 10px' }}
               onClick={() => setIsPreviewOpen(true)}
             >
-              <Eye size={14} />
-              <span>Ver Modelo Renderizado</span>
-            </button>
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm btn-icon"
-              onClick={() => navigate(`/templates/${currentTemplate.id}`)}
-              title="Abrir no editor de HTML"
-            >
-              <FileCode2 size={14} />
+              <Eye size={13} />
+              <span>Ver Modelo</span>
             </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* 3. TOOLBAR DE SELEÇÃO E BUSCA DOS DESTINATÁRIOS */}
+      {/* TOOLBAR DE SELEÇÃO E BUSCA */}
       <div
         style={{
           display: 'flex',
@@ -395,14 +396,14 @@ export default function DisparoEmails() {
           gap: '12px',
           background: 'var(--bg-app)',
           border: '1px solid var(--border-subtle)',
-          padding: '12px 16px',
+          padding: '10px 16px',
           borderRadius: '8px',
-          marginBottom: '16px',
+          marginBottom: '14px',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--text-primary)' }}>
-            {selectedIds.length} de {empresasFiltradas.length} empresas com Backup {currentAction.routine.toUpperCase()} selecionadas
+          <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
+            {selectedIds.length} de {empresasFiltradas.length} empresas com Backup {selectedRoutine.toUpperCase()} selecionadas
           </span>
           <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>|</span>
           <button
@@ -429,8 +430,8 @@ export default function DisparoEmails() {
         </div>
 
         {/* Busca textual rápida */}
-        <div className="search-input-wrapper" style={{ width: '320px' }}>
-          <Search size={15} className="search-icon" />
+        <div className="search-input-wrapper" style={{ width: '300px' }}>
+          <Search size={14} className="search-icon" />
           <input
             type="text"
             className="form-control form-control-sm"
@@ -441,7 +442,7 @@ export default function DisparoEmails() {
         </div>
       </div>
 
-      {/* 4. TABELA DE DESTINATÁRIOS ELEGÍVEIS */}
+      {/* TABELA DE DESTINATÁRIOS */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-muted)' }}>
           <RefreshCw className="spin" size={28} />
@@ -451,10 +452,10 @@ export default function DisparoEmails() {
         <div className="card-panel" style={{ textAlign: 'center', padding: '48px', color: 'var(--text-muted)' }}>
           <Users size={36} style={{ marginBottom: '12px', opacity: 0.4 }} />
           <h3 style={{ fontSize: '16px', color: 'var(--text-primary)', marginBottom: '4px' }}>
-            Nenhuma empresa encontrada com rotina {currentAction.routine.toUpperCase()} ativa
+            Nenhuma empresa encontrada com rotina {selectedRoutine.toUpperCase()} ativa
           </h3>
           <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-            Selecione outro tipo de comunicado acima.
+            Selecione outra rotina de backup no topo.
           </p>
         </div>
       ) : (
@@ -477,7 +478,7 @@ export default function DisparoEmails() {
                 <th>Responsável</th>
                 <th>Destinatário Principal (To:)</th>
                 <th>Cópias (BCC:)</th>
-                <th>Rotina Exigida</th>
+                <th>Rotina Ativa</th>
                 <th style={{ textAlign: 'right' }}>Cadastro</th>
               </tr>
             </thead>
@@ -525,7 +526,7 @@ export default function DisparoEmails() {
                     </td>
                     <td>
                       <span className="backup-tag active" style={{ fontSize: '11px', textTransform: 'uppercase' }}>
-                        ✓ {currentAction.routine}
+                        ✓ {selectedRoutine}
                       </span>
                     </td>
                     <td style={{ textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
@@ -588,7 +589,7 @@ export default function DisparoEmails() {
                 __html: currentTemplate.corpo_html
                   ?.replace(/\{\{empresa\}\}/g, 'EXEMPLO EMPRESA LTDA')
                   ?.replace(/\{\{responsavel\}\}/g, 'João da Silva')
-                  ?.replace(/\{\{tipo_backup\}\}/g, currentAction.routine.toUpperCase())
+                  ?.replace(/\{\{tipo_backup\}\}/g, selectedRoutine.toUpperCase())
                   ?.replace(/\{\{data_limite\}\}/g, new Date().toLocaleDateString('pt-BR'))
                   ?.replace(/\{\{observacoes\}\}/g, 'Rotina operacional agendada'),
               }}
