@@ -90,6 +90,9 @@ export default function DisparoEmails() {
 
   // Modal Pré-visualização do Modelo
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewHtml, setPreviewHtml] = useState('');
+  const [previewAssunto, setPreviewAssunto] = useState('');
+  const [loadingPreview, setLoadingPreview] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -126,6 +129,31 @@ export default function DisparoEmails() {
       null
     );
   }, [templates, currentTemplateKey, selectedRoutine]);
+
+  // Carrega o preview HTML renderizado do backend ao selecionar ou abrir preview
+  useEffect(() => {
+    if (!currentTemplate) return;
+    const loadPreview = async () => {
+      try {
+        setLoadingPreview(true);
+        const res = await api.previewTemplate({
+          template_id: currentTemplate.id,
+          tipo_backup: selectedRoutine.charAt(0).toUpperCase() + selectedRoutine.slice(1),
+          empresa_nome: 'EXEMPLO EMPRESA LTDA',
+          responsavel: 'João da Silva',
+        });
+        setPreviewHtml(res.html);
+        setPreviewAssunto(res.assunto);
+      } catch (err) {
+        // Fallback básico usando html_content caso o endpoint falhe
+        setPreviewHtml(currentTemplate.html_content || '');
+        setPreviewAssunto(currentTemplate.assunto || '');
+      } finally {
+        setLoadingPreview(false);
+      }
+    };
+    loadPreview();
+  }, [currentTemplate, selectedRoutine]);
 
   // FILTRO ESTRITO DE CLIENTES: Apenas clientes com a rotina selecionada ATIVA
   const empresasFiltradas = useMemo(() => {
@@ -552,7 +580,7 @@ export default function DisparoEmails() {
           isOpen={true}
           onClose={() => setIsPreviewOpen(false)}
           title={`Visualização: ${currentTemplate.nome}`}
-          maxWidth="700px"
+          maxWidth="750px"
           footer={
             <>
               <button
@@ -572,28 +600,37 @@ export default function DisparoEmails() {
           }
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <div style={{ background: 'var(--bg-app)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-card)' }}>
-              <strong>Assunto:</strong> <span style={{ color: '#38BDF8' }}>{currentTemplate.assunto?.replace(/\{\{empresa\}\}/g, 'EXEMPLO EMPRESA LTDA')}</span>
+            <div style={{ background: 'var(--bg-app)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-card)', fontSize: '13px' }}>
+              <strong>Assunto:</strong> <span style={{ color: '#38BDF8', fontFamily: 'var(--font-mono)' }}>{previewAssunto || currentTemplate.assunto?.replace(/\{\{empresa\}\}/g, 'EXEMPLO EMPRESA LTDA')}</span>
             </div>
-            <div
-              style={{
-                background: '#FFFFFF',
-                color: '#1F2937',
-                padding: '24px',
-                borderRadius: '8px',
-                minHeight: '260px',
-                border: '1px solid #E5E7EB',
-                fontFamily: 'Inter, sans-serif',
-              }}
-              dangerouslySetInnerHTML={{
-                __html: currentTemplate.corpo_html
-                  ?.replace(/\{\{empresa\}\}/g, 'EXEMPLO EMPRESA LTDA')
-                  ?.replace(/\{\{responsavel\}\}/g, 'João da Silva')
-                  ?.replace(/\{\{tipo_backup\}\}/g, selectedRoutine.toUpperCase())
-                  ?.replace(/\{\{data_limite\}\}/g, new Date().toLocaleDateString('pt-BR'))
-                  ?.replace(/\{\{observacoes\}\}/g, 'Rotina operacional agendada'),
-              }}
-            />
+
+            {loadingPreview ? (
+              <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+                <RefreshCw className="spin" size={24} />
+                <p style={{ marginTop: '8px', fontSize: '13px' }}>Renderizando visualização do e-mail...</p>
+              </div>
+            ) : (
+              <div
+                style={{
+                  background: '#FFFFFF',
+                  borderRadius: '8px',
+                  overflow: 'hidden',
+                  border: '1px solid #E5E7EB',
+                  minHeight: '380px',
+                }}
+              >
+                <iframe
+                  title="Pré-visualização do E-mail"
+                  srcDoc={previewHtml}
+                  style={{
+                    width: '100%',
+                    height: '420px',
+                    border: 'none',
+                    background: '#FFFFFF',
+                  }}
+                />
+              </div>
+            )}
           </div>
         </Modal>
       )}

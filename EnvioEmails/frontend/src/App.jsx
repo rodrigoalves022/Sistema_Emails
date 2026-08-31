@@ -44,8 +44,8 @@ function AppLayout() {
             </Routes>
           </div>
           <footer style={{ textAlign: 'center', padding: '14px 24px', fontSize: '11.5px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-app)' }}>
-            <span>© {new Date().getFullYear()} <strong style={{ color: 'var(--text-primary)' }}>Rodrigo Alves</strong> &nbsp;•&nbsp; Core TI Expert &nbsp;•&nbsp; Todos os direitos reservados</span>
-          </footer>
+            <span>© {new Date().getFullYear()} <strong style={{ color: 'var(--text-primary)' }}></strong> &nbsp;•&nbsp; Core TI Expert &nbsp;•&nbsp; Todos os direitos reservados</span>
+          </footer>Rodrigo Alves
         </main>
       </div>
     </div>
