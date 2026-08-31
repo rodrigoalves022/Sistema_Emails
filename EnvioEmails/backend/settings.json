@@ -1,0 +1,13 @@
+{
+  "smtp_host": "smtp.zoho.com",
+  "smtp_port": 465,
+  "smtp_use_ssl": true,
+  "smtp_user": "rodrigo.silva@coretiexpert.com.br",
+  "smtp_password": "gAAAAABqlXuCe4E7jgouQbGGxv4D9zzji8lSFXNEGIOAMVU_UAs7ERxIRUHaqS2Bhg-DTsXY4niPSArww47o95GuNAXdPaz8jA==",
+  "smtp_from_email": "rodrigo.silva@coretiexpert.com.br",
+  "smtp_from_name": "Core TI Expert - Departamento de Backup",
+  "signature_company": "Core TI Expert",
+  "signature_dept": "Departamento de Backup",
+  "signature_phone": "(62) 3242-5830",
+  "signature_email": "clientes.backup@coretiexpert.com.br"
+}

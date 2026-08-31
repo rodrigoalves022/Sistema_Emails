@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ titulo }}</title>
+</head>
+<body style="margin:0; padding:0; background-color:#eef1f4; font-family: Arial, Helvetica, sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#eef1f4; padding: 32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px; width:100%; background-color:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 4px 16px rgba(0,0,0,0.06);">
+
+          <!-- Faixa de cor da marca -->
+          <tr>
+            <td style="height:8px; line-height:8px; font-size:0; background:{{ accent_bar }};">&nbsp;</td>
+          </tr>
+
+          <!-- Cabeçalho com logo -->
+          <tr>
+            <td style="padding: 28px 40px 8px 40px;" align="left">
+              {% if preview_mode %}
+                <div style="font-size:22px; font-weight:800; color:#231F20; letter-spacing:-0.5px; display:inline-block;">
+                  Core TI Expert
+                </div>
+              {% else %}
+                <img src="cid:logo" alt="Core TI Expert" width="180" style="display:block; border:0; outline:none; text-decoration:none;">
+              {% endif %}
+            </td>
+          </tr>
+
+          <!-- Título -->
+          <tr>
+            <td style="padding: 16px 40px 0 40px;">
+              <h1 style="margin:0; font-size:20px; line-height:1.35; color:#231F20; font-weight:700;">
+                {{ titulo }}
+              </h1>
+            </td>
+          </tr>
+
+          <!-- Corpo -->
+          <tr>
+            <td style="padding: 16px 40px 8px 40px; color:#3c3c3c; font-size:15px; line-height:1.6;">
+              <p style="margin:0 0 16px 0;">Prezado(a) {{ cliente_nome }},</p>
+              {% for paragrafo in paragrafos %}
+              <p style="margin:0 0 16px 0;">{{ paragrafo | safe }}</p>
+              {% endfor %}
+              <p style="margin:24px 0 0 0;">Atenciosamente,</p>
+            </td>
+          </tr>
+
+          <!-- Assinatura -->
+          <tr>
+            <td style="padding: 0 40px 32px 40px;">
+              <table role="presentation" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="border-left:3px solid {{ accent_solid }}; padding-left:14px;">
+                    <p style="margin:0; font-size:14px; font-weight:700; color:#231F20;">{{ signature_company or 'Core TI Expert' }}</p>
+                    <p style="margin:2px 0 0 0; font-size:13px; color:#6b7280;">{{ signature_dept or 'Departamento de Backup' }}</p>
+                    <p style="margin:8px 0 0 0; font-size:13px; color:#6b7280;">Fone: {{ signature_phone or '(62) 3242-5830' }}</p>
+                    <p style="margin:2px 0 0 0; font-size:13px; color:#6b7280;">E-mail: {{ signature_email or 'clientes.backup@coretiexpert.com.br' }}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Rodapé -->
+          <tr>
+            <td style="padding: 20px 40px; background-color:#f7f8fa; border-top:1px solid #eceef1;">
+              <p style="margin:0; font-size:11px; color:#9aa1ab; line-height:1.5;">
+                Esta é uma mensagem automática do sistema de backup da {{ signature_company or 'Core TI Expert' }}. Caso não seja o destinatário esperado, por favor desconsidere este e-mail.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

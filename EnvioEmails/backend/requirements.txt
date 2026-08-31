@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+pydantic
+email-validator
+pydantic-settings
+jinja2
+python-dotenv
+python-multipart
+openpyxl
+cryptography
+pytest
+httpx
