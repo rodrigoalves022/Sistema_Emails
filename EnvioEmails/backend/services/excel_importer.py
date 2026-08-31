@@ -3,7 +3,7 @@ from pathlib import Path
 import openpyxl
 from database import get_db, log_auditoria
 
-EXCEL_DEFAULT_PATH = Path(r"c:\Users\rodrigo.silva\Videos\Sistema e-mail\Bancos\cadastro_clientes.xlsx")
+EXCEL_DEFAULT_PATH = Path(__file__).resolve().parent.parent.parent / "Bancos" / "cadastro_clientes.xlsx"
 _EMAIL_RE = re.compile(r"([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)")
 _NAME_EMAIL_RE = re.compile(r"['\"]?([^'\"<]+?)['\"]?\s*<([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)>")
 
